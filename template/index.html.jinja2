@@ -1,0 +1,71 @@
+{% extends "default/index.html.jinja2" %}
+
+{% block title %}Hello World{% endblock %}
+
+{% block nav %}
+    <input type="search" placeholder="Search..." role="searchbox" aria-label="search"
+                   pattern=".+" required>
+    {{ super() }}
+{% endblock %}
+
+{% block content %}
+    <main class="pdoc">
+
+    {% filter to_html %}
+# SRA Dokumentation und Tools
+
+Das hier ist die Code-Dokumentation für den SRA und das grafische User-Interface.
+
+In der Menü-Leiste links werden die einzelnen Funktionen erklärt. Zu einem Menü gehört immer eine Python (.py) Datei.
+Zum Beispiel gehört zu `autoencoder.functions` die Datei `functions.py` im Ordner `/autoencoder`.
+
+### Installation
+
+Zunächst muss das Repository von Gitlab heruntergeladen werden (falls noch nicht geschehen, bitte die Anleitung in den
+Teams-Dateien beachten). Anschließend müssen alle Python-Bibliotheken installiert werden. Alle verwendeten Bibliotheken
+sind in der `requirements.txt`-Datei aufgeführt. Diese können installiert werden, indem folgender Befehl in das Terminal
+geschrieben wird.
+
+```bash
+pip install requirements.txt
+```
+
+### Start des User-Interfaces
+
+Anschließend muss das User-Interface gestartet werden. Das UI wurde mit Streamlit gebaut und muss daher mit Streamlit
+gestartet werden. Für den Start einfach folgenden Befehl in das Terminal einfügen. Anschließend wird das UI gestartet
+und automatisch geöffnet.
+
+```bash
+streamlit run app.py
+```
+
+
+### (Optional) Umgebungsvariablen einrichten
+
+Für die Verwendung der SMA-Wechselrichter API sowie des Forecasts von pvnode, müssen ein paar Umgebungsvariablen
+eingerichtet werden. Ich empfehle dazu die Verwendung von python-dotenv. Bitte dazu mit pip installieren:
+
+```bash
+pip install python-dotenv
+```
+
+Dann eine Datei mit dem Namen `.env` im Projektordner `SRAandTools` lokal erstellen. In die Datei werden die
+Umgebungsvariablen eingefügt:
+
+```
+API_KEY=
+username_SMA=
+pwd_SMA=
+```
+
+`API_KEY` ist der API-Key von pvnode. `username_SMA` ist der Username für das Login bei SMA. Und `pwd_SMA` ist das
+Passwort für den Login bei SMA.
+
+
+
+
+    {% endfilter %}
+    </main>
+    {% include "search.html.jinja2" %}
+{% endblock %}
