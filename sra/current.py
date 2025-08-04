@@ -29,8 +29,60 @@ def current_calculation(
         current_stc * irradiance / 1000 * (1 + current_alpha * (temperature - 25) / 100)
     ) * (1 + correction_factor / 100)
 
-
 def fit_current_data_to_surface(data, initial_isc_stc, initial_alpha):
+    """
+    Fits the measured Isc data to the reference surface by optimizing both
+    the STC short-circuit current (Isc_stc) and its temperature coefficient (alpha)
+    simultaneously.
+
+    Input Arguments:
+    - data (pd.DataFrame)      : Measured data, expects columns 'G_mod', 'T_eff', 'Isc'
+    - initial_isc_stc (float) : Initial guess for Isc under STC conditions
+    - initial_alpha (float)    : Initial guess for temperature coefficient of Isc
+
+    Returns:
+    - adjusted_isc_stc (float): Optimized Isc under STC conditions
+    - adjusted_alpha (float)   : Optimized temperature coefficient of Isc
+    """
+    import numpy as np
+    from scipy.optimize import minimize
+
+    # Combined loss function for simultaneous fitting
+    def combined_loss(params):
+        isc_stc, alpha = params
+        predicted = current_calculation(
+            isc_stc,
+            alpha,
+            data["G_mod"],
+            data["T_eff"]
+        )
+        return np.mean((predicted - data["Isc"]) ** 2)
+
+    # Bounds:
+    # - Isc_stc between 50% and 120% of its initial guess
+    # - alpha within ±20% of its initial guess
+    bounds = [
+        (initial_isc_stc * 0.5, initial_isc_stc * 1.2),
+        (initial_alpha * 1.2,        initial_alpha * 0.8)
+    ]
+
+    # Initial parameter vector
+    initial_guess = [initial_isc_stc, initial_alpha]
+
+    # Optimize using L-BFGS-B which supports bounds
+    result = minimize(
+        combined_loss,
+        x0=initial_guess,
+        bounds=bounds,
+        method="L-BFGS-B"
+    )
+
+    # Unpack optimized parameters
+    adjusted_isc_stc, adjusted_alpha = result.x
+    return adjusted_isc_stc, adjusted_alpha
+
+ 
+def fit_current_data_to_surface_old(data, initial_isc_stc, initial_alpha):
     """
     ## Fits the measured Isc data to the reference surface
 

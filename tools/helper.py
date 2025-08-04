@@ -95,8 +95,8 @@ def plot_random_iv_curves(
         )
     fig.update_layout(
         title="5 Beispiel IV-Kurven aus dem Datensatz",
-        xaxis_title="Voltage [V]",
-        yaxis_title="Current [A]",
+        xaxis_title="<i>V</i> (V)",
+        yaxis_title="<i>I</i> (A)",
     )
     return fig
 
@@ -162,8 +162,8 @@ def plot_reconstructions(
 
     fig.update_layout(
         title="Random IV Curves with Reconstructions",
-        xaxis_title="Voltage [V]",
-        yaxis_title="Current [A]",
+        xaxis_title="<i>V</i> (V)",
+        yaxis_title="<i>I</i> (A)",
         showlegend=True,
         legend=dict(x=1.05, y=1, traceorder="normal"),
         height=1400,
@@ -244,6 +244,54 @@ def calculate_parameters(row):
         [isc, voc, pmpp, impp, vmpp],
         index=["Isc", "Voc", "Pmpp", "Impp", "Vmpp"],
     )
+
+import ast
+
+def calculate_parameters_new(row):
+    """
+    ## Calculating the Curve params
+
+    Extract the important curve params like the Pmpp, Isc, ...
+
+    Input Arguments:
+    - a DataFrame row
+
+    Returns:
+    - pd.Series with Isc, Voc, ...
+    """
+    current = row["Current"]
+    voltage = row["Voltage"]
+
+    # ✅ Ensure both are actual lists
+    if isinstance(current, str):
+        try:
+            current = ast.literal_eval(current)
+        except:
+            return pd.Series([None] * 5, index=["Isc", "Voc", "Pmpp", "Impp", "Vmpp"])
+    if isinstance(voltage, str):
+        try:
+            voltage = ast.literal_eval(voltage)
+        except:
+            return pd.Series([None] * 5, index=["Isc", "Voc", "Pmpp", "Impp", "Vmpp"])
+
+    # ✅ Skip if not valid numeric lists
+    if not (isinstance(current, list) and isinstance(voltage, list)):
+        return pd.Series([None] * 5, index=["Isc", "Voc", "Pmpp", "Impp", "Vmpp"])
+    if not current or not voltage:
+        return pd.Series([None] * 5, index=["Isc", "Voc", "Pmpp", "Impp", "Vmpp"])
+
+    try:
+        isc = max(current)
+        voc = max(voltage)
+        power = np.array(current) * np.array(voltage)
+        mpp = np.argmax(power)
+        pmpp = power[mpp]
+        impp = current[mpp]
+        vmpp = voltage[mpp]
+
+        return pd.Series([isc, voc, pmpp, impp, vmpp], index=["Isc", "Voc", "Pmpp", "Impp", "Vmpp"])
+    except Exception:
+        return pd.Series([None] * 5, index=["Isc", "Voc", "Pmpp", "Impp", "Vmpp"])
 
 
 def extract_curve_parameters(dataframe: pd.DataFrame):

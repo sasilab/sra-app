@@ -132,8 +132,8 @@ if uploaded_file is not None:
                 )
                 fig2.update_layout(
                     title=f"IV-Kurve für den Index {selected_index}",
-                    xaxis_title="Voltage [V]",
-                    yaxis_title="Current [A]",
+                    xaxis_title="<i>V</i> (V)",
+                    yaxis_title="<i>I</i> st(A)",
                 )
                 st.plotly_chart(fig2, use_container_width=True)
 

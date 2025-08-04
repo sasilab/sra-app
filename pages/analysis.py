@@ -16,7 +16,7 @@ from sra.power import (
     adjust_power_simple,
     power_calculation,
     calculate_sra_matrix,
-    fit_data_to_surface,
+    fit_data_to_surface_new,
 )
 
 if "project" not in st.session_state:
@@ -97,7 +97,7 @@ else:
 
                 # 4. Schauen wie ich den Fit mache (je nach Verteilung!)
                 if is_filled:
-                    adjusted_p_stc, adjusted_p_gamma = fit_data_to_surface(
+                    adjusted_p_stc, adjusted_p_gamma = fit_data_to_surface_new(
                         data, p_stc, p_gamma, anzahl_module
                     )
 

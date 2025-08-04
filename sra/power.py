@@ -31,7 +31,7 @@ def power_calculation(
         * p_mpp
         * irradiance
         / 1000
-        * (1 + p_gamma * (temperature - 25) / 100 + np.log(irradiance / 1000) / 100)
+        * (1 + p_gamma * (temperature - 25) / 100)
     ) * (1 + correction_factor / 100)
 
 
@@ -90,7 +90,58 @@ def adjust_power_simple(data, p_mpp, p_gamma, anzahl_module):
     avg_relative_distance = data["relative_distance"].mean()
     return avg_relative_distance
 
+def fit_data_to_surface_new(data, initial_stc_pmpp, initial_tkp, anzahl_module):
+    """
+    Fits the measured data to the reference surface by optimizing both STC power
+    (Pmpp) and temperature coefficient (tkp) simultaneously.
 
+    Input Arguments:
+    - data (pd.DataFrame)       : Measured data, expects columns 'G_eff', 'T_eff', 'Pmpp'
+    - initial_stc_pmpp (float)  : Initial guess for power under STC conditions
+    - initial_tkp (float)       : Initial guess for temperature coefficient of power
+    - anzahl_module (int)       : Number of modules in the string
+
+    Returns:
+    - adjusted_p_mpp (float)    : Optimized STC power
+    - adjusted_p_gamma (float)  : Optimized temperature coefficient
+    """
+    import numpy as np
+    from scipy.optimize import minimize
+
+    # Combined loss function for both parameters
+    def combined_loss(params):
+        stc_pmpp, tkp = params
+        predicted = power_calculation(
+            stc_pmpp,
+            tkp,
+            anzahl_module,
+            data["G_eff"],
+            data["T_eff"]
+        )
+        return np.mean((predicted - data["Pmpp"]) ** 2)
+
+    # Define bounds for simultaneous fitting:
+    # - STC Pmpp: between 50% and 120% of the initial guess
+    # - tkp     : within ±20% of the initial guess
+    bounds = [
+        (initial_stc_pmpp * 0.5, initial_stc_pmpp * 1.2),
+        (initial_tkp * 1.2,        initial_tkp * 0.8)
+    ]
+
+    # Run optimization
+    initial_guess = [initial_stc_pmpp, initial_tkp]
+    result = minimize(
+        combined_loss,
+        x0=initial_guess,
+        bounds=bounds,
+        method="L-BFGS-B"
+    )
+
+    # Extract optimized parameters
+    adjusted_p_mpp, adjusted_p_gamma = result.x
+    return adjusted_p_mpp, adjusted_p_gamma
+
+ 
 def fit_data_to_surface(data, initial_stc_pmpp, initial_tkp, anzahl_module):
     """
     ## Fits the measured data to the reference surface
